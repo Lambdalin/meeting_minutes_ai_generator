@@ -1,15 +1,10 @@
 import gradio as gr
-from main import transcriber_test
+from transcriber import transcriber
 
-# def transcribe_audio(audio_file):
-#     # result = transcription_model.transcribe(audio_file)
-#     # transcription = result["text"]
-#     # return transcription
-#     return 'This is a transcription example...'
 
 def delete_transcription():
-    return (gr.update(value = None, visible = False), 
-            gr.update(value = None, visible = True), 
+    return (gr.update(value = None, interactive = False), 
+            gr.update(value = None), 
             gr.update(interactive = False), 
             gr.update(interactive = False))
 
@@ -24,7 +19,8 @@ def audio_interface(audio):
             gr.update(interactive=False)   
         )
     
-    transcription = transcriber_test(audio)
+    #transcription = transcriber(audio)
+    transcription = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.Fusce convallis, mauris imperdiet gravida bibendum, nisl turpis suscipit mauris, sed placerat ipsum nisi eu enim. In hac habitasse platea dictumst. Integer nec libero. Vivamus nec lorem. Donec leo. Vivamus fermentum nibh in augue. Praesent a lacus at urna congue rutrum. Nulla enim eros, porttitor eu, tempus id, varius non, nibh. Duis enim nulla, luctus eu, dapibus lacinia, venenatis id, quam. Vestibulum imperdiet, magna nec eleifend rutrum, nunc lectus vestibulum velit, euismod lacinia quam nisl id lorem. Quisque erat. Vestibulum pellentesque, justo mollis pretium suscipit, justo nulla blandit libero, in blandit augue justo quis nisl. Fusce mattis viverra elit. Fusce quis tortor. Integer commodo, orci ut porttitor lobortis, odio magna sodales lectus, at molestie diam odio nec magna. Praesent nec nisl a purus blandit viverra. Nullam ac urna. Proin eget elit. Nunc scelerisque venenatis urna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate, ligula eget sollicitudin vehicula, arcu libero sodales leo, eget blandit nunc tortor eu nibh. Nullam libero. Integer nec libero. Vivamus nec lorem. Donec leo. Vivamus fermentum nibh in augue. Praesent a lacus at urna congue rutrum. Nulla enim eros, porttitor eu, tempus id, var.'
 
     return (transcription, 
             transcription, 
@@ -32,26 +28,25 @@ def audio_interface(audio):
             gr.update(interactive = True)) 
 
 
-def edit_mode(edit_mode):
-    return (gr.update(visible = True),
-            gr.update(visible = True),
-            gr.update(visible = False),
-            gr.update(visible = False), 
-            gr.update(visible = False), 
-            gr.update(interactive = False))
+def edit_mode():
+    return (gr.update(visible = True), #edit_controls
+            gr.update(interactive = True), #transcription text editable
+            gr.update(visible = False), #edit button
+            gr.update(visible = False), # delete button
+            gr.update(interactive = False)) # transcribe button
 
 
 def save_changes(edited_text, old_text):
     if old_text != edited_text:
-        return (gr.update(value = edited_text, visible = False), 
-                gr.update(value = edited_text, visible = True), 
-                gr.update(visible = False), 
-                gr.update(visible = True),
-                gr.update(visible = True), 
-                gr.update(interactive = True))
+        return (gr.update(value = edited_text, interactive = False), # transcription_text_editable
+                gr.update(value = edited_text), # transcription_text_show
+                gr.update(visible = False), # edit_controls
+                gr.update(visible = True), # edit_button
+                gr.update(visible = True), # delete_button
+                gr.update(interactive = True)) # transcribe_button
     else: 
-        return (gr.update(value = old_text, visible = False), 
-                gr.update(value = old_text, visible = True), 
+        return (gr.update(value = old_text, interactive = False), 
+                gr.update(value = old_text), 
                 gr.update(visible = False), 
                 gr.update(visible = True),
                 gr.update(visible = True), 
@@ -59,8 +54,8 @@ def save_changes(edited_text, old_text):
 
 
 def cancel_edit(old_text):
-    return (gr.update(value = old_text, visible = False), 
-            gr.update(value = old_text, visible = True), 
+    return (gr.update(value = old_text, interactive = False), 
+            gr.update(value = old_text), 
             gr.update(visible = False), 
             gr.update(visible = True),
             gr.update(visible = True), 
@@ -80,20 +75,21 @@ with gr.Blocks(fill_height=True) as demo:
     transcribe_button = gr.Button("Transcribir", 
                                 interactive = False) 
     
-    transcription_text_show = gr.Markdown(label = "Transcripción del audio")
-
-    transcription_text_editable = gr.Textbox(label = "Transcripción del audio", 
-                                            visible = False,
-                                            max_lines=100)
+    #transcription_text_show = gr.Markdown(label = "Transcripción del audio")
+    transcription_text_show = gr.State()
+    transcription_text_editable = gr.Textbox(label = "Transcripción del audio",
+                                            max_lines=100,
+                                            interactive=False)
 
     with gr.Row():
         edit_button = gr.Button("Editar", 
                                 interactive = False) 
         delete_button = gr.Button("Eliminar", 
                                 interactive=False) 
+        
 
     with gr.Row(visible = False) as edit_controls:
-        save_button = gr.Button("Guardar cambios") 
+        save_changes_button = gr.Button("Guardar cambios") 
         cancel_edit_button = gr.Button("Descartar")
 
     # Update transcription button state based on audio upload
@@ -114,17 +110,16 @@ with gr.Blocks(fill_height=True) as demo:
 
     # Enable edit mode
     edit_button.click(
-        fn = lambda: edit_mode(True),
+        fn = edit_mode,
         outputs = [edit_controls, 
                 transcription_text_editable, 
                 edit_button, 
                 delete_button, 
-                transcription_text_show, 
                 transcribe_button]
     )
     
     # Save changes
-    save_button.click(
+    save_changes_button.click(
         fn = save_changes,
         inputs = [transcription_text_editable, 
                 transcription_text_show],
