@@ -10,8 +10,13 @@ dependencies = [
     "gradio>=5.20.1",
     "jupyter>=1.1.1",
     "langchain>=0.3.20",
+    "openai>=1.72.0",
     "openai-whisper>=20240930",
+    "pydantic>=2.10.6",
+    "pylance>=0.25.1",
+    "python-dotenv>=1.1.0",
     "torch>=2.6.0",
     "torchaudio>=2.6.0",
     "transformers>=4.49.0",
+    "vllm==0.8.1" 
 ]
