@@ -46,12 +46,6 @@ class AsistenteCargo(BaseModel):
     cargo: str = Field(..., description="Rol o posición del asistente en la organización")
 
 
-class DesarrolloTopico(BaseModel):
-    tema: str = Field(..., description="Título o nombre del tema tratado.")
-    sintesis: str = Field(..., description="Resumen breve de lo discutido sobre el tema."
-    )
-
-
 class Proposicion(BaseModel):
     descripcion: str = Field(..., description="Texto de la propuesta presentada.")
     aprobada: bool = Field(..., description="Indica si la propuesta fue aprobada (True/False).")
@@ -80,13 +74,13 @@ class ActaReunion(BaseModel):
     tipo_sesion: Optional[TipoSesion] = Field(
         ..., description="Tipo de sesión (ej. 'Ordinaria', 'Extraordinaria'). Opcional."
     )
-    orden_del_dia: List[str] = Field(
-        ..., description="Lista de temas planificados para tratar en la reunión."
-    )
     asistencia_cargo: List[AsistenteCargo] = Field(
         ..., description="Lista de asistentes con sus respectivos cargos."
     )
-    desarrollo_temas: List[DesarrolloTopico] = Field(
+    orden_del_dia: List[str] = Field(
+        ..., description="Lista de temas planificados para tratar en la reunión."
+    )
+    desarrollo_temas: List[str] = Field(
         ..., description="Lista de temas discutidos durante la reunión."
     )
     proposiciones: List[Proposicion] = Field(
@@ -104,4 +98,6 @@ class ActaReunion(BaseModel):
 #             json.dump(self.model_dump(), f, indent=4, ensure_ascii=False)
 
 schema = ActaReunion.model_json_schema()
+
+
 
