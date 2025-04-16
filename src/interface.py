@@ -1,155 +1,310 @@
 import gradio as gr
-from transcriber import transcriber
+import pandas as pd
+
+# from src.transcriber import transcriber
+# from src.generator import generate
+# from src.generator import get_client
+from src.jsonvalidator import ActaReunion
+# from src.style import css
+# llm = get_client()
+
+
+def generate_act(text):
+    # res = generate(text, llm)
+    res = """{
+    "lugar": "aula de reuniones",
+    "fecha": "2025-04-15",
+    "hora": "9:03",
+    "tipo_sesion": "Ordinaria",
+    "asistencia_cargo": [
+    { "nombre": "Oscar Lucero Moya", "cargo": "Director Ejecutivo" },
+    { "nombre": "Lucía Gómez Vidal", "cargo": "Secretaria del Director" },
+    { "nombre": "Ana María Sánchez Mora", "cargo": "Directora de Operaciones" },
+    { "nombre": "Roberto Martínez Sánchez", "cargo": "" },
+    { "nombre": "María Torres", "cargo": "" },
+    { "nombre": "Pedro López", "cargo": "" }
+    ],
+    "orden_del_dia": [
+    "Revisión del presupuesto para el segundo trimestre",
+    "Planificación del evento de innovación tecnológica"
+    ],
+    "desarrollo_temas": [
+    "Se discutió un desvío del 15% en los gastos operativos por aumento en materiales y servicios. Se planteó renegociar contratos o buscar nuevos proveedores.",
+    "Se planificó el evento de innovación tecnológica para el 15 de mayo en el salón principal del edificio central. Se rechazó la propuesta de invitar a expertos internacionales por razones presupuestarias."
+    ],
+    "proposiciones": [
+    {
+        "descripcion": "Revisión de todos los contratos activos antes del 20 de abril",
+        "aprobada": true
+    },
+    {
+        "descripcion": "Invitar a un experto internacional",
+        "aprobada": false
+    },
+    {
+        "descripcion": "Contactar a un profesor universitario especializado en IA",
+        "aprobada": false
+    }
+    ],
+    "acuerdos_adoptados": [
+    {
+        "descripcion": "Revisar todos los contratos activos antes del 20 de abril",
+        "fecha_cumplimiento": "2025-04-20",
+        "responsable": "Lucía Gómez Vidal"
+    },
+    {
+        "descripcion": "Mantener el evento de innovación tecnológica el 15 de mayo en el salón principal del edificio central",
+        "fecha_cumplimiento": "2025-05-15",
+        "responsable": "Todos los asistentes"
+    },
+    {
+        "descripcion": "Coordinar con logística la reserva y acondicionamiento del salón principal",
+        "fecha_cumplimiento": "2025-05-10",
+        "responsable": "Pedro López"
+    },
+    {
+        "descripcion": "Enviar el acta anterior a Roberto para su firma",
+        "fecha_cumplimiento": "2025-04-18",
+        "responsable": "Lucía Gómez Vidal"
+    },
+    {
+        "descripcion": "Reportar el fallo del proyector al área técnica",
+        "fecha_cumplimiento": "2025-04-15",
+        "responsable": "María Torres"
+    }
+    ],
+    "hora_finalizacion": "10:18"
+}
+
+"""
+    final_act = ActaReunion.model_validate_json(res)
+
+    return (final_act, gr.update(visible=False))
 
 
 def delete_transcription():
-    return (gr.update(value = None, interactive = False), 
-            gr.update(value = None), 
-            gr.update(interactive = False), 
-            gr.update(interactive = False))
+    return (
+        gr.update(value=None, interactive=False),
+        gr.update(value=None),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
+    )
 
-def audio_interface(audio):
-    
+
+def transcribe(audio):
     if audio is None:
-        error_message = "Please upload an audio file."
-        return (
-            error_message,  
-            error_message,  
-            gr.update(interactive=False),  
-            gr.update(interactive=False)   
-        )
-    
-    #transcription = transcriber(audio)
-    transcription = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.Fusce convallis, mauris imperdiet gravida bibendum, nisl turpis suscipit mauris, sed placerat ipsum nisi eu enim. In hac habitasse platea dictumst. Integer nec libero. Vivamus nec lorem. Donec leo. Vivamus fermentum nibh in augue. Praesent a lacus at urna congue rutrum. Nulla enim eros, porttitor eu, tempus id, varius non, nibh. Duis enim nulla, luctus eu, dapibus lacinia, venenatis id, quam. Vestibulum imperdiet, magna nec eleifend rutrum, nunc lectus vestibulum velit, euismod lacinia quam nisl id lorem. Quisque erat. Vestibulum pellentesque, justo mollis pretium suscipit, justo nulla blandit libero, in blandit augue justo quis nisl. Fusce mattis viverra elit. Fusce quis tortor. Integer commodo, orci ut porttitor lobortis, odio magna sodales lectus, at molestie diam odio nec magna. Praesent nec nisl a purus blandit viverra. Nullam ac urna. Proin eget elit. Nunc scelerisque venenatis urna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate, ligula eget sollicitudin vehicula, arcu libero sodales leo, eget blandit nunc tortor eu nibh. Nullam libero. Integer nec libero. Vivamus nec lorem. Donec leo. Vivamus fermentum nibh in augue. Praesent a lacus at urna congue rutrum. Nulla enim eros, porttitor eu, tempus id, var.'
+        gr.Error("Please upload an audio file.")
 
-    return (transcription, 
-            transcription, 
-            gr.update(interactive = True), 
-            gr.update(interactive = True)) 
+    # transcription = transcriber(audio)
+    transcription = "This is a transcription test"
+    return (
+        transcription,
+        transcription,
+        gr.update(interactive=True),
+        gr.update(interactive=True),
+    )
 
 
-def edit_mode():
-    return (gr.update(visible = True), #edit_controls
-            gr.update(interactive = True), #transcription text editable
-            gr.update(visible = False), #edit button
-            gr.update(visible = False), # delete button
-            gr.update(interactive = False)) # transcribe button
+def activate_edit_mode():
+    return (
+        gr.update(visible=True),  # edit_controls
+        gr.update(interactive=True),  # transcription text editable
+        gr.update(visible=False),  # edit button
+        gr.update(visible=False),  # delete button
+        gr.update(interactive=False),
+    )  # transcribe button
 
 
 def save_changes(edited_text, old_text):
     if old_text != edited_text:
-        return (gr.update(value = edited_text, interactive = False), # transcription_text_editable
-                gr.update(value = edited_text), # transcription_text_show
-                gr.update(visible = False), # edit_controls
-                gr.update(visible = True), # edit_button
-                gr.update(visible = True), # delete_button
-                gr.update(interactive = True)) # transcribe_button
-    else: 
-        return (gr.update(value = old_text, interactive = False), 
-                gr.update(value = old_text), 
-                gr.update(visible = False), 
-                gr.update(visible = True),
-                gr.update(visible = True), 
-                gr.update(interactive = True)) 
+        old_text = edited_text
+
+    return (
+        gr.update(value=old_text, interactive=False),  # transcription_text_editable
+        edited_text,  # transcription_text_show
+        gr.update(visible=False),  # edit_controls
+        gr.update(visible=True),  # edit_button
+        gr.update(visible=True),  # delete_button
+        gr.update(interactive=True),
+    )
 
 
 def cancel_edit(old_text):
-    return (gr.update(value = old_text, interactive = False), 
-            gr.update(value = old_text), 
-            gr.update(visible = False), 
-            gr.update(visible = True),
-            gr.update(visible = True), 
-            gr.update(interactive = True))
+    return (
+        gr.update(value=old_text, interactive=False),
+        gr.update(value=old_text),
+        gr.update(visible=False),
+        gr.update(visible=True),
+        gr.update(visible=True),
+        gr.update(interactive=True),
+    )
 
 
+with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
+    transcription_value = gr.State()
+    act_state = gr.State()
 
+    gr.Markdown("# Generador de actas de reuniones")
 
-with gr.Blocks(fill_height=True) as demo:
+    with gr.Column() as paso1:
+        audio_input = gr.Audio(label="Subir audio", type="filepath", interactive=True)
+        transcribe_button = gr.Button("Transcribir", interactive=False)
+        transcription_editable_value = gr.Textbox(
+            label="Transcripción del audio", max_lines=100, interactive=False
+        )
 
-    gr.Markdown("### Generador de actas de reuniones")
+        with gr.Row():
+            edit_button = gr.Button("Editar", interactive=False)
+            delete_button = gr.Button("Eliminar", interactive=False)
 
-    audio_input = gr.Audio(label = "Subir audio", 
-                        type = "filepath", 
-                        interactive = True) 
-        
-    transcribe_button = gr.Button("Transcribir", 
-                                interactive = False) 
+        with gr.Row(visible=False) as edit_controls:
+            save_changes_button = gr.Button("Guardar cambios")
+            cancel_edit_button = gr.Button("Descartar")
+
+        generate_button = gr.Button("Generar Acta")
+
+    @gr.render(inputs=[act_state],triggers=[act_state.change])
+    def display_form(acta: ActaReunion):
+        with gr.Column():
+            with gr.Row():
+                fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
+                with gr.Row():
+                    hora_input = gr.Textbox(value=acta.hora, label="Hora")
+                    hora_f_input = gr.Textbox(
+                    show_label=False, value=acta.hora_finalizacion
+                    )
+
+            with gr.Row():
+                lugar_input = gr.Textbox(value=acta.lugar, label="Lugar")
+
+                tipo_sesion = gr.Radio(
+                    choices=["Ordinaria", "Extraordinaria"],
+                    interactive=True,
+                    label="Tipo de sesión",
+                    value=acta.tipo_sesion,
+                )
+            
+            df_asistencia = pd.DataFrame(
+                    [ac.__dict__ for ac in acta.asistencia_cargo]
+                )
+            asistencia = gr.Dataframe(
+                    interactive=True, value=df_asistencia, label="Asistencia"
+                )        
+                    
+            gr.Markdown("### Orden del día")
+            ordenes = []
+            for texto in acta.orden_del_dia:
+                orden = gr.Textbox(value=texto, interactive=True, show_label=False)
+                ordenes.append(orden)
+            
+            add_orden_button = gr.Button("Añadir orden del dia")
+            @add_orden_button.click(inputs=[act_state], outputs=[act_state])
+            def add_empty_orden(acta: ActaReunion):
+                acta.orden_del_dia.append(" ")
+                return acta
+
+            gr.Markdown("### Temas Desarrollados")
+            temas = []
+            for texto in acta.desarrollo_temas:
+                tema = gr.Textbox(value=texto, interactive=True, show_label=False)
+                temas.append(tema)
+            
+            add_tema_button = gr.Button("Tema")
+
+            df_propuestas = pd.DataFrame([p.__dict__ for p in acta.proposiciones])
+            
+            df_propuestas.columns = ["Propuesta", "Estado"]
+            df_propuestas.replace({True: 'Aprobado', False: 'No aprobado'}, inplace=True)
+
+            gr.Markdown("Propuestas planteadas:")
+            propuestas = gr.Dataframe(
+                value=df_propuestas,
+            )
+
+            df_acuerdos = pd.DataFrame([a.__dict__ for a in acta.acuerdos_adoptados])
+            df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
     
-    #transcription_text_show = gr.Markdown(label = "Transcripción del audio")
-    transcription_text_show = gr.State()
-    transcription_text_editable = gr.Textbox(label = "Transcripción del audio",
-                                            max_lines=100,
-                                            interactive=False)
-
-    with gr.Row():
-        edit_button = gr.Button("Editar", 
-                                interactive = False) 
-        delete_button = gr.Button("Eliminar", 
-                                interactive=False) 
+            gr.Markdown("Acuerdos Aprobados:")
+            acuerdos = gr.Dataframe(
+                value=df_acuerdos,
+            )
         
+        # add_orden_button.click(
+        #     fn= lambda: acta.orden_del_dia.append(' ')
+        #     outputs=[]
+        # )
+        
+        def add_():
+            return 
+            
 
-    with gr.Row(visible = False) as edit_controls:
-        save_changes_button = gr.Button("Guardar cambios") 
-        cancel_edit_button = gr.Button("Descartar")
-
-    # Update transcription button state based on audio upload
     audio_input.change(
-        fn = lambda audio: gr.update(interactive = audio is not None),
-        inputs = audio_input,
-        outputs = transcribe_button
-    )
-    # Perform transcription
-    transcribe_button.click(
-        fn = audio_interface,
-        inputs = audio_input,
-        outputs = [transcription_text_editable, 
-                transcription_text_show, 
-                edit_button, 
-                delete_button]
-    )
-
-    # Enable edit mode
-    edit_button.click(
-        fn = edit_mode,
-        outputs = [edit_controls, 
-                transcription_text_editable, 
-                edit_button, 
-                delete_button, 
-                transcribe_button]
+        fn=lambda audio: gr.update(interactive=audio is not None),
+        inputs=audio_input,
+        outputs=transcribe_button,
     )
     
-    # Save changes
+    transcribe_button.click(
+        fn=transcribe,
+        inputs=audio_input,
+        outputs=[
+            transcription_value,
+            transcription_editable_value,
+            edit_button,
+            delete_button,
+        ],
+    )
+
+    edit_button.click(
+        fn=activate_edit_mode,
+        outputs=[
+            edit_controls,
+            transcription_editable_value,
+            edit_button,
+            delete_button,
+            transcribe_button,
+        ],
+    )
+
     save_changes_button.click(
-        fn = save_changes,
-        inputs = [transcription_text_editable, 
-                transcription_text_show],
-        outputs = [transcription_text_editable, 
-                transcription_text_show, 
-                edit_controls, 
-                edit_button, 
-                delete_button, 
-                transcribe_button]
+        fn=save_changes,
+        inputs=[transcription_editable_value, transcription_value],
+        outputs=[
+            transcription_editable_value,
+            transcription_value,
+            edit_controls,
+            edit_button,
+            delete_button,
+            transcribe_button,
+        ],
     )
 
-    # Cancel edit
     cancel_edit_button.click(
-        fn = cancel_edit,
-        inputs = transcription_text_show,
-        outputs = [transcription_text_editable, 
-                transcription_text_show, 
-                edit_controls, 
-                edit_button, 
-                delete_button, 
-                transcribe_button]
+        fn=cancel_edit,
+        inputs=transcription_value,
+        outputs=[
+            transcription_editable_value,
+            transcription_value,
+            edit_controls,
+            edit_button,
+            delete_button,
+            transcribe_button,
+        ],
     )
 
-    # Delete transcription
     delete_button.click(
-        fn = delete_transcription,
-        outputs = [transcription_text_editable,
-                transcription_text_show, 
-                edit_button, 
-                delete_button]
+        fn=delete_transcription,
+        outputs=[
+            transcription_editable_value,
+            transcription_value,
+            edit_button,
+            delete_button,
+        ],
     )
 
-demo.launch()
+    generate_button.click(
+        fn=generate_act,
+        inputs=[transcription_value],
+        outputs=[act_state, paso1],
+    )
+
