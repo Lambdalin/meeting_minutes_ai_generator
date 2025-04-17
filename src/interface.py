@@ -163,87 +163,92 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
 
         generate_button = gr.Button("Generar Acta")
 
-    @gr.render(inputs=[act_state],triggers=[act_state.change])
+    @gr.render(inputs=[act_state], triggers=[act_state.change])
     def display_form(acta: ActaReunion):
-        with gr.Column():
+        with gr.Row():
+            fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
             with gr.Row():
-                fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
-                with gr.Row():
-                    hora_input = gr.Textbox(value=acta.hora, label="Hora")
-                    hora_f_input = gr.Textbox(
-                    show_label=False, value=acta.hora_finalizacion
-                    )
-
-            with gr.Row():
-                lugar_input = gr.Textbox(value=acta.lugar, label="Lugar")
-
-                tipo_sesion = gr.Radio(
-                    choices=["Ordinaria", "Extraordinaria"],
-                    interactive=True,
-                    label="Tipo de sesión",
-                    value=acta.tipo_sesion,
+                hora_input = gr.Textbox(value=acta.hora, label="Hora de inicio")
+                hora_f_input = gr.Textbox(
+                    label="Hora de finalizacion", value=acta.hora_finalizacion
                 )
-            
-            df_asistencia = pd.DataFrame(
-                    [ac.__dict__ for ac in acta.asistencia_cargo]
-                )
-            asistencia = gr.Dataframe(
-                    interactive=True, value=df_asistencia, label="Asistencia"
-                )        
-                    
-            gr.Markdown("### Orden del día")
-            ordenes = []
-            for texto in acta.orden_del_dia:
-                orden = gr.Textbox(value=texto, interactive=True, show_label=False)
-                ordenes.append(orden)
-            
-            add_orden_button = gr.Button("Añadir orden del dia")
-            @add_orden_button.click(inputs=[act_state], outputs=[act_state])
-            def add_empty_orden(acta: ActaReunion):
-                acta.orden_del_dia.append(" ")
-                return acta
 
-            gr.Markdown("### Temas Desarrollados")
-            temas = []
-            for texto in acta.desarrollo_temas:
-                tema = gr.Textbox(value=texto, interactive=True, show_label=False)
-                temas.append(tema)
-            
-            add_tema_button = gr.Button("Tema")
+        with gr.Row():
+            lugar_input = gr.Textbox(value=acta.lugar, label="Lugar")
 
-            df_propuestas = pd.DataFrame([p.__dict__ for p in acta.proposiciones])
-            
-            df_propuestas.columns = ["Propuesta", "Estado"]
-            df_propuestas.replace({True: 'Aprobado', False: 'No aprobado'}, inplace=True)
-
-            gr.Markdown("Propuestas planteadas:")
-            propuestas = gr.Dataframe(
-                value=df_propuestas,
+            tipo_sesion = gr.Radio(
+                choices=["Ordinaria", "Extraordinaria"],
+                interactive=True,
+                label="Tipo de sesión",
+                value=acta.tipo_sesion,
             )
 
-            df_acuerdos = pd.DataFrame([a.__dict__ for a in acta.acuerdos_adoptados])
-            df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
-    
-            gr.Markdown("Acuerdos Aprobados:")
-            acuerdos = gr.Dataframe(
-                value=df_acuerdos,
-            )
+        df_asistencia = pd.DataFrame([ac.__dict__ for ac in acta.asistencia_cargo])
+        df_asistencia.columns = ["Nombre", "Cargo"]
+        asistencia = gr.Dataframe(
+            interactive=True,
+            value=df_asistencia,
+            label="Asistencia",
+            row_count=(20, "dynamic"),
+            col_count=(2, "fixed"),
+        )
+
+        orden_del_dia = gr.Dataframe(
+            headers=["Orden"],
+            interactive=True,
+            value=acta.orden_del_dia,
+            label="Orden del día",
+            row_count=(10, "dynamic"),
+            col_count=(1, "fixed"),
+        )
+
+        temas_desarrollados = gr.Dataframe(
+            headers=["Temas"],
+            interactive=True,
+            value=acta.desarrollo_temas,
+            label="Temas desarrollados",
+            row_count=(10, "dynamic"),
+            col_count=(1, "fixed"),
+        )
+
+        df_propuestas = pd.DataFrame([p.__dict__ for p in acta.proposiciones])
+        df_propuestas.columns = ["Propuesta", "Estado"]
+        df_propuestas.replace({True: "Aprobado", False: "No aprobado"}, inplace=True)
+
+        gr.Markdown("Propuestas planteadas:")
+        propuestas = gr.Dataframe(
+            value=df_propuestas,
+        )
+
+        df_acuerdos = pd.DataFrame([a.__dict__ for a in acta.acuerdos_adoptados])
+        df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
+
+        gr.Markdown("Acuerdos Aprobados:")
+        acuerdos = gr.Dataframe(
+            value=df_acuerdos,
+        )
+
+        submit_form = gr.Button('Generar acta')
+        submit_form.click(
+            inputs=[fecha_input, 
+                    hora_input, 
+                    hora_f_input, 
+                    lugar_input, 
+                    tipo_sesion, 
+                    asistencia, 
+                    orden_del_dia, 
+                    temas_desarrollados, 
+                    propuestas, 
+                    acuerdos]
+        )
         
-        # add_orden_button.click(
-        #     fn= lambda: acta.orden_del_dia.append(' ')
-        #     outputs=[]
-        # )
-        
-        def add_():
-            return 
-            
 
     audio_input.change(
         fn=lambda audio: gr.update(interactive=audio is not None),
         inputs=audio_input,
         outputs=transcribe_button,
     )
-    
+
     transcribe_button.click(
         fn=transcribe,
         inputs=audio_input,
@@ -307,4 +312,3 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
         inputs=[transcription_value],
         outputs=[act_state, paso1],
     )
-
