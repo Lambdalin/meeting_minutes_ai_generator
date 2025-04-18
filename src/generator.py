@@ -1,7 +1,7 @@
 # import typing as t
 from openai import OpenAI
-from src.jsonvalidator import schema
-from src.settings import settings
+from jsonvalidator import schema
+from settings import settings
 from vllm import LLM, SamplingParams
 from vllm.sampling_params import GuidedDecodingParams
 

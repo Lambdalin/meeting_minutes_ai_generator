@@ -1,11 +1,12 @@
 import gradio as gr
 import pandas as pd
 
-from src.transcriber import transcriber
-from src.generator import generate
-from src.generator import get_client
-from src.jsonvalidator import ActaReunion
-from src.act_downloadable import Act_pdf as create_pdf
+#from transcriber import transcriber
+from generator import generate
+from generator import get_client
+from jsonvalidator import ActaReunion
+from act_downloadable import Act_pdf as create_pdf
+from constants import ACTA_DEFAULT
 
 llm = get_client()
 
@@ -30,8 +31,8 @@ def transcribe(audio):
     if audio is None:
         gr.Error("Please upload an audio file.")
 
-    transcription = transcriber(audio)
-    
+    #transcription = transcriber(audio)
+    transcription = 'Transcription example'
     return (
         transcription,
         transcription,
@@ -78,7 +79,7 @@ def cancel_edit(old_text):
 
 with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
     transcription_value = gr.State()
-    act_state = gr.State()
+    act_state = gr.State(ACTA_DEFAULT)
 
     gr.Markdown("# Generador de actas de reuniones")
 
@@ -148,6 +149,9 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
         )
 
         df_propuestas = pd.DataFrame([p.__dict__ for p in acta.proposiciones])
+        if df_propuestas.empty:
+            df_propuestas = pd.DataFrame(columns=["Propuesta", "Estado"])
+            df_propuestas.loc[0] = ["No se detectaron propuestas", '']
         df_propuestas.columns = ["Propuesta", "Estado"]
         df_propuestas.replace({True: "Aprobado", False: "No aprobado"}, inplace=True)
 
@@ -157,6 +161,9 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
         )
 
         df_acuerdos = pd.DataFrame([a.__dict__ for a in acta.acuerdos_adoptados])
+        if df_acuerdos.empty:
+            df_acuerdos = pd.DataFrame(columns=["Acuerdo", "Fecha limite", "Responsable"])
+            df_acuerdos.loc[0] = ["No se detectaron acuerdos", '', '']
         df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
 
         gr.Markdown("Acuerdos Aprobados:")
