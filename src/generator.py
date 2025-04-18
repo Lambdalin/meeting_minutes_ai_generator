@@ -105,6 +105,7 @@ def get_client():
                 max_model_len=settings.CTX_WINDOW,
                 max_num_seqs=2,
                 enable_chunked_prefill=True,
+                gpu_memory_utilization=0.5
             )
         case _:
             raise ValueError("env should be dev | prod")
@@ -126,7 +127,7 @@ def generate(prompt: str, llm, model_params: dict = {}) -> str:
                 frequency_penalty=model_params.get("frequency_penalty", 0.5),
                 presence_penalty=model_params.get("presence_penalty", 1.2),
                 repetition_penalty=model_params.get("repetition_penalty", 1.2),
-                guided_decoding=guided_decoding_params,
+                guided_decoding=guided_decoding_params
             )
             outputs = llm.generate(prompt, sampling_params)
             return outputs[0].outputs[0].text
