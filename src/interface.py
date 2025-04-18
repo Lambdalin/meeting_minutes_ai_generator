@@ -1,82 +1,17 @@
 import gradio as gr
 import pandas as pd
 
-# from src.transcriber import transcriber
-# from src.generator import generate
-# from src.generator import get_client
+from src.transcriber import transcriber
+from src.generator import generate
+from src.generator import get_client
 from src.jsonvalidator import ActaReunion
-# from src.style import css
-# llm = get_client()
+from src.act_downloadable import Act_pdf as create_pdf
 
+llm = get_client()
 
 def generate_act(text):
-    # res = generate(text, llm)
-    res = """{
-    "lugar": "aula de reuniones",
-    "fecha": "2025-04-15",
-    "hora": "9:03",
-    "tipo_sesion": "Ordinaria",
-    "asistencia_cargo": [
-    { "nombre": "Oscar Lucero Moya", "cargo": "Director Ejecutivo" },
-    { "nombre": "Lucía Gómez Vidal", "cargo": "Secretaria del Director" },
-    { "nombre": "Ana María Sánchez Mora", "cargo": "Directora de Operaciones" },
-    { "nombre": "Roberto Martínez Sánchez", "cargo": "" },
-    { "nombre": "María Torres", "cargo": "" },
-    { "nombre": "Pedro López", "cargo": "" }
-    ],
-    "orden_del_dia": [
-    "Revisión del presupuesto para el segundo trimestre",
-    "Planificación del evento de innovación tecnológica"
-    ],
-    "desarrollo_temas": [
-    "Se discutió un desvío del 15% en los gastos operativos por aumento en materiales y servicios. Se planteó renegociar contratos o buscar nuevos proveedores.",
-    "Se planificó el evento de innovación tecnológica para el 15 de mayo en el salón principal del edificio central. Se rechazó la propuesta de invitar a expertos internacionales por razones presupuestarias."
-    ],
-    "proposiciones": [
-    {
-        "descripcion": "Revisión de todos los contratos activos antes del 20 de abril",
-        "aprobada": true
-    },
-    {
-        "descripcion": "Invitar a un experto internacional",
-        "aprobada": false
-    },
-    {
-        "descripcion": "Contactar a un profesor universitario especializado en IA",
-        "aprobada": false
-    }
-    ],
-    "acuerdos_adoptados": [
-    {
-        "descripcion": "Revisar todos los contratos activos antes del 20 de abril",
-        "fecha_cumplimiento": "2025-04-20",
-        "responsable": "Lucía Gómez Vidal"
-    },
-    {
-        "descripcion": "Mantener el evento de innovación tecnológica el 15 de mayo en el salón principal del edificio central",
-        "fecha_cumplimiento": "2025-05-15",
-        "responsable": "Todos los asistentes"
-    },
-    {
-        "descripcion": "Coordinar con logística la reserva y acondicionamiento del salón principal",
-        "fecha_cumplimiento": "2025-05-10",
-        "responsable": "Pedro López"
-    },
-    {
-        "descripcion": "Enviar el acta anterior a Roberto para su firma",
-        "fecha_cumplimiento": "2025-04-18",
-        "responsable": "Lucía Gómez Vidal"
-    },
-    {
-        "descripcion": "Reportar el fallo del proyector al área técnica",
-        "fecha_cumplimiento": "2025-04-15",
-        "responsable": "María Torres"
-    }
-    ],
-    "hora_finalizacion": "10:18"
-}
-
-"""
+    res = generate(text, llm)
+    
     final_act = ActaReunion.model_validate_json(res)
 
     return (final_act, gr.update(visible=False))
@@ -95,8 +30,8 @@ def transcribe(audio):
     if audio is None:
         gr.Error("Please upload an audio file.")
 
-    # transcription = transcriber(audio)
-    transcription = "This is a transcription test"
+    transcription = transcriber(audio)
+    
     return (
         transcription,
         transcription,
@@ -138,6 +73,7 @@ def cancel_edit(old_text):
         gr.update(visible=True),
         gr.update(interactive=True),
     )
+
 
 
 with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
@@ -228,8 +164,14 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
             value=df_acuerdos,
         )
 
-        submit_form = gr.Button('Generar acta')
+        submit_form = gr.Button('Generar archivo de acta')
+
+        with gr.Column(visible = False) as Download_side:
+            gr.Markdown("Su archivo está listo para descargarse!")
+            Archivo = gr.File()
+
         submit_form.click(
+            fn = create_pdf,
             inputs=[fecha_input, 
                     hora_input, 
                     hora_f_input, 
@@ -239,10 +181,11 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
                     orden_del_dia, 
                     temas_desarrollados, 
                     propuestas, 
-                    acuerdos]
+                    acuerdos],
+            outputs=[Download_side, Archivo]
         )
-        
 
+    
     audio_input.change(
         fn=lambda audio: gr.update(interactive=audio is not None),
         inputs=audio_input,

@@ -2,9 +2,9 @@
 from openai import OpenAI
 from src.jsonvalidator import schema
 from src.settings import settings
-# from vllm import LLM, SamplingParams
-# from vllm.sampling_params import GuidedDecodingParams
-from jsonvalidator import ActaReunion
+from vllm import LLM, SamplingParams
+from vllm.sampling_params import GuidedDecodingParams
+
 
 system_prompt = '''
 Eres un experto encargado de generar un acta de reunión en formato JSON estructurado a partir de una transcripción de audio desordenada o informal. El texto puede incluir interrupciones, repeticiones, errores de lenguaje y contenido hablado de manera natural. Tu trabajo es identificar y extraer correctamente la información clave de la reunión, siguiendo esta estructura:
@@ -91,8 +91,6 @@ Salida esperada:
 }
 
 '''
-
-
 def get_client():
     match settings.ENVIRONMENT:
         case "dev":

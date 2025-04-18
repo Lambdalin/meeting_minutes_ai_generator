@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "accelerate==1.4.0",
     "ffmpeg==1.4",
+    "fpdf2>=2.8.2",
     "gradio==5.20.1",
     "jupyter==1.1.1",
     "langchain==0.3.20",
@@ -18,5 +19,5 @@ dependencies = [
     "torch==2.6.0",
     "torchaudio==2.6.0",
     "transformers==4.49.0",
-    "vllm==0.8.1" 
+    "vllm==0.8.1",
 ]
