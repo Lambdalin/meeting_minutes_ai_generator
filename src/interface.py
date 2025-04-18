@@ -1,7 +1,7 @@
 import gradio as gr
 import pandas as pd
 
-#from transcriber import transcriber
+from transcriber import transcriber
 from generator import generate
 from generator import get_client
 from jsonvalidator import ActaReunion
@@ -31,8 +31,7 @@ def transcribe(audio):
     if audio is None:
         gr.Error("Please upload an audio file.")
 
-    #transcription = transcriber(audio)
-    transcription = 'Transcription example'
+    transcription = transcriber(audio)
     return (
         transcription,
         transcription,
