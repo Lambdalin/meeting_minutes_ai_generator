@@ -102,7 +102,7 @@ def get_client():
                 task="generate",
                 seed=42,
                 max_model_len=settings.CTX_WINDOW,
-                gpu_memory_utilization=0.5
+                gpu_memory_utilization=0.8
             )
         case _:
             raise ValueError("env should be dev | prod")
