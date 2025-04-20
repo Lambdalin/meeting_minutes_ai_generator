@@ -42,19 +42,25 @@ import json
 
 
 class AsistenteCargo(BaseModel):
-    nombre: str = Field(..., description="Nombre completo del asistente a la reunión. Solo incluye nombres y apellidos, sin el cargo o rol que tiene en la empresa o cualquier informacion extra")
-    cargo: str = Field(..., description="Rol o posición del asistente en la organización")
+    nombre: str = Field(..., description="Nombre completo del asistente a la reunión. Solo incluye nombres y apellidos, sin el cargo o rol que tiene en la empresa o cualquier informacion extra",
+                        examples=["Mario Diaz González", "Roberto", "Joaquin Rivas"])
+    cargo: str = Field(..., description="Rol o posición del asistente en la organización",
+                    examples=["Director ejecutivo", "Decana de la facultad de tecnologias interactivas"])
 
 
 class Proposicion(BaseModel):
-    descripcion: str = Field(..., description="Texto de la propuesta presentada.")
+    descripcion: str = Field(..., description="Texto de la propuesta presentada.",
+                        examples=["Se propone extender el tiempo de descanso después de la guardia laboral", "Se propone multar a los que dañen la propiedad de la empresa"])
     aprobada: bool = Field(..., description="Indica si la propuesta fue aprobada (True/False).")
 
 
 class Acuerdo(BaseModel):
-    descripcion: str = Field(...,description="Detalle del acuerdo adoptado")
-    fecha_cumplimiento: str = Field(..., description="Fecha límite para cumplir el acuerdo (formato YYYY-MM-DD).")
-    responsable: str = Field(..., description="Nombre de la persona encargada de cumplir el acuerdo."
+    descripcion: str = Field(...,description="Detalles del acuerdo adoptado. Toda acción o decisión que tenga un responsable y una fecha límite, o que se aprobó como obligación. Debe contener solo la tarea concreta o acción a realizar, no el nombre del responsable.",
+                            examples=["Mandar una carta de peticion para extender el tiempo de descanzo", "Crear un documento de aviso para eviar a los multados"])
+    fecha_cumplimiento: str = Field(..., description="Fecha límite para cumplir el acuerdo (formato DD-MM-YYYY).",
+                            examples=['15-04-25'])
+    responsable: str = Field(..., description="Nombre de la persona encargada de cumplir el acuerdo.",
+                            examples=["Mario Diaz González", "Roberto", "Joaquin Rivas"]
     )
 
 
@@ -66,7 +72,7 @@ class TipoSesion(str, Enum):
 class ActaReunion(BaseModel):
     lugar: Optional[str] = Field(description="Ubicación física donde se realizó la reunión.")
     fecha: Optional[str] = Field(
-        description="Fecha de realización de la reunión (formato YYYY-MM-DD)."
+        description="Fecha de realización de la reunión (formato DD-MM-YYYY)."
     )
     hora: Optional[str] = Field(
         ..., description="Hora de inicio de la reunión (formato HH:MM). Opcional."
@@ -75,16 +81,16 @@ class ActaReunion(BaseModel):
         ..., description="Tipo de sesión (ej. 'Ordinaria', 'Extraordinaria'). Opcional."
     )
     asistencia_cargo: List[AsistenteCargo] = Field(
-        ..., description="Lista de asistentes con sus respectivos cargos."
+        ..., description="Lista de personas presentes con su cargo. Excluye a personas que se dijo explícitamente que no asistieron."
     )
     orden_del_dia: List[str] = Field(
-        ..., description="Lista de temas planificados para tratar en la reunión."
+        ..., description="Lista de temas planificados para tratar en la reunión. Solo incluye lo que se dijo que sería la orden del día, no todo lo que se discutió."
     )
     desarrollo_temas: List[str] = Field(
         ..., description="Lista de temas discutidos durante la reunión."
     )
     proposiciones: List[Proposicion] = Field(
-        ..., description="Lista de propuestas presentadas y su estado de aprobación."
+        ..., description="Lista de propuestas presentadas y su estado de aprobación.",
     )
     acuerdos_adoptados: List[Acuerdo] = Field(
         ..., description="Acuerdos alcanzados durante la reunión."
