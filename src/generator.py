@@ -101,10 +101,7 @@ def get_client():
                 dtype=settings.DTYPE,
                 task="generate",
                 seed=42,
-                enforce_eager=False,
                 max_model_len=settings.CTX_WINDOW,
-                max_num_seqs=2,
-                enable_chunked_prefill=True,
                 gpu_memory_utilization=0.3
             )
         case _:
