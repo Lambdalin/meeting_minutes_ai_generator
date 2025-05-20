@@ -117,7 +117,7 @@ def generate(prompt: str, llm, model_params: dict = {}) -> str:
             assert isinstance(llm, LLM), "LLM should be an instance of LLM class"
             guided_decoding_params = GuidedDecodingParams(json=schema)
             sampling_params = SamplingParams(
-                max_tokens=model_params.get("max_tokens", 2048),
+                max_tokens=model_params.get("max_tokens", 8048),
                 temperature=model_params.get("temperature", 0),
                 top_p=model_params.get("top_p", 0.95),
                 frequency_penalty=model_params.get("frequency_penalty", 0.5),
