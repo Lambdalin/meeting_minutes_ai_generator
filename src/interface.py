@@ -12,6 +12,46 @@ llm = get_client()
 
 def generate_act(text):
     res = generate(text, llm)
+    # '''
+    # lugar="aula inteligente",
+    # fecha="",  
+    # hora="9:15",
+    # tipo_sesion=TipoSesion("Ordinaria"),
+    # asistencia_cargo=[
+    #     AsistenteCargo(nombre="Oscar Lucero Moya", cargo="Director ejecutivo"),
+    #     AsistenteCargo(nombre="Lucia Gomez Vidal", cargo="Secretaria del director"),
+    #     AsistenteCargo(nombre="Ana Maria Sanchez Mora", cargo="Directora de operaciones"),
+    # ],
+    # orden_del_dia=["las ventas del trimestre"],
+    # desarrollo_temas=[
+    #     "Se aprobó el acta anterior con la observación de corregir la fecha del año de 2023 a 2024.",
+    #     "Se analizaron los resultados de ventas, que presentaron una disminución del 12%, y se debatió sobre los problemas de envío.",
+    #     "Se propuso hacer teletrabajo el viernes, pero se decidió que no sería posible por la necesidad de reunirse presencialmente.",
+    #     "Se solicitó solucionar el problema del aire acondicionado debido a condiciones incómodas en el aula.",
+    # ],
+    # proposiciones=[
+    #     Proposicion(descripcion="Aplicar una multa a los responsables de los retrasos en los envíos", aprobada=True),
+    #     Proposicion(descripcion="Dialogar con los responsables de los envíos", aprobada=False),
+    #     Proposicion(descripcion="Hacer teletrabajo el viernes", aprobada=False),
+    # ],
+    # acuerdos_adoptados=[
+    #     Acuerdo(
+    #         descripcion="corregir la fecha del acta anterior",
+    #         fecha_cumplimiento="",
+    #         responsable="Ana Maria Sanchez Mora",
+    #     ),
+    #     Acuerdo(
+    #         descripcion="redactar el documento de sanción",
+    #         fecha_cumplimiento="pasado mañana",
+    #         responsable="Maria",
+    #     ),
+    #     Acuerdo(
+    #         descripcion="avisar al equipo técnico sobre la rotura del aire acondicionado",
+    #         fecha_cumplimiento="hoy",
+    #         responsable="Oscar Lucero Moya",
+    #     ),
+    # ],
+    # hora_finalizacion="10:40"'''#
     
     final_act = ActaReunion.model_validate_json(res)
 
@@ -120,7 +160,9 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
             )
 
         df_asistencia = pd.DataFrame([ac.__dict__ for ac in acta.asistencia_cargo])
-        df_asistencia.columns = ["Nombre", "Cargo"]
+        if df_asistencia.empty:
+            df_asistencia = pd.DataFrame(columns=["Nombre", "Cargo"])
+            df_asistencia.loc[0] = ["No se detectaron participantes", ""]   
         asistencia = gr.Dataframe(
             interactive=True,
             value=df_asistencia,
@@ -157,6 +199,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
         gr.Markdown("Propuestas planteadas:")
         propuestas = gr.Dataframe(
             value=df_propuestas,
+            interactive=True
         )
 
         df_acuerdos = pd.DataFrame([a.__dict__ for a in acta.acuerdos_adoptados])
@@ -168,6 +211,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as demo:
         gr.Markdown("Acuerdos Aprobados:")
         acuerdos = gr.Dataframe(
             value=df_acuerdos,
+            interactive=True
         )
 
         submit_form = gr.Button('Generar archivo de acta')
