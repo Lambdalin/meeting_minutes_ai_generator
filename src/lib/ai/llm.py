@@ -9,7 +9,7 @@ from settings import settings
 
 
 generation_params = {
-    "max_tokens": 2048,
+    "max_tokens": 500,
     "temperature": 0,
     "top_p": 0.95,
     "frequency_penalty": 0.5,
