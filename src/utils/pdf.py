@@ -1,5 +1,4 @@
 from fpdf import FPDF, XPos, YPos
-import gradio as gr
 
 def dataframe_to_table(df):
     headers = tuple(df.columns)
@@ -7,7 +6,7 @@ def dataframe_to_table(df):
     data = (headers,) + tuple(data)
     return data
 
-def Act_pdf(fecha, hora_inicio, hora_final, lugar, tipo_sesion, asistencia, orden, temas, propuestas, acuerdos):
+def generate_and_save_pdf(fecha, hora_inicio, hora_final, lugar, tipo_sesion, asistencia, orden, temas, propuestas, acuerdos, filepath):
     ASISTENCIA = dataframe_to_table(asistencia)
     ORDEN = dataframe_to_table(orden)
     TEMAS = dataframe_to_table(temas)
@@ -66,7 +65,4 @@ def Act_pdf(fecha, hora_inicio, hora_final, lugar, tipo_sesion, asistencia, orde
             for datum in data_row:
                 row.cell(datum)
     
-    file_path = "Acta_de_reunion.pdf"
-    pdf.output(file_path)
-    
-    return gr.update(visible=True), gr.update(value = file_path)
+    pdf.output(filepath)
