@@ -39,17 +39,17 @@ PROMPT = """
   </restricciones>
   <formato_salida>
     El JSON debe contener los siguientes campos:
-    {{\n
-        "lugar": "<Lugar donde se realizó la reunión, si se menciona>",\n
-        "fecha": "<Fecha de la reunión, si se menciona>",\n
-        "hora": "<Hora de inicio, si se menciona>",\n
-        "tipo_sesion": "<Tipo de sesión, 'Ordinaria' o 'Extraordinaria' exclusivamente, si se menciona>",\n
-        "orden_del_dia": "<Lista de temas que se mencionaron explícitamente como parte del orden del día. No incluir temas discutidos que no estén en la agenda>",\n
-        "asistencia_cargo": "<Lista de personas que asistieron y su cargo. Excluir personas que se mencione que no asistieron>",\n
-        "desarrollo_temas": "<Lista de temas discutidos durante la reunión con una breve síntesis por tema>",\n
-        "proposiciones": "<Lista de propuestas realizadas, indicando si fueron aprobadas (true) o rechazadas (false)>",\n
-        "acuerdos_adoptados": "<Lista de acciones o decisiones con un responsable y fecha límite (si está presente). La descripción debe contener solo la acción concreta.>",\n
-        "hora_finalizacion": "<Hora en que terminó la reunión, si se menciona>",\n
+    {{
+        "lugar": "<Lugar donde se realizó la reunión, si se menciona>",
+        "fecha": "<Fecha de la reunión, si se menciona>",
+        "hora": "<Hora de inicio, si se menciona>",
+        "tipo_sesion": "<Tipo de sesión, 'Ordinaria' o 'Extraordinaria' exclusivamente, si se menciona>",
+        "orden_del_dia": "<Lista de temas que se mencionaron explícitamente como parte del orden del día. No incluir temas discutidos que no estén en la agenda>",
+        "asistencia_cargo": "<Lista de personas que asistieron y su cargo. Excluir personas que se mencione que no asistieron>",
+        "desarrollo_temas": "<Lista de temas discutidos durante la reunión.>",
+        "proposiciones": "<Lista de propuestas realizadas, indicando si fueron aprobadas (true) o rechazadas (false)>",
+        "acuerdos_adoptados": "<Lista de acciones o decisiones con un responsable y fecha límite (si está presente). La descripción debe contener solo la acción concreta.>",
+        "hora_finalizacion": "<Hora en que terminó la reunión, si se menciona>",
     }}
   </formato_salida>
   <transcripcion>
