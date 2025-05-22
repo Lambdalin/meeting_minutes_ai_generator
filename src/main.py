@@ -2,27 +2,34 @@ import gradio as gr
 import pandas as pd
 
 from constants import ACTA_DEFAULT, PROMPT
+from lib.ai.asr import Whisper
+from lib.ai.llm import OpenAIClient, vLLMClient
+from lib.pdf import generate_and_save_pdf
 from schema import ActaReunion
 from settings import settings
-from utils.ai.asr import Whisper
-from utils.ai.llm import OpenAIClient, vLLMClient
-from utils.pdf import generate_and_save_pdf
 
 llm = OpenAIClient() if settings.ENVIRONMENT == "dev" else vLLMClient()
 asr = Whisper()
 
 
-def transcribe(audio_path: str):
+def transcribe(audio_path: str | None):
     if audio_path is None:
-        gr.Error("Please upload an audio file.")
+        gr.Error("Suba un audio.")
+        return
 
-    transcription = asr.transcribe(audio_path)
-    return (
-        transcription,
-        transcription,
-        gr.update(interactive=True),
-        gr.update(interactive=True),
-    )
+    try:
+        # transcription = asr.transcribe(audio_path)
+        transcription = mock_transcription
+        return (
+            transcription,
+            transcription,
+            gr.update(interactive=True),
+            gr.update(interactive=True),
+        )
+
+    except Exception as e:
+        print(f"Error to transcribe audio: {e}")
+        gr.Error("Ocurrió un error al generar la transcripción.")
 
 
 def activate_edit_transcription():
@@ -71,17 +78,20 @@ def delete_transcription():
     )
 
 
-def generate_acta(transcription: str):
-    prompt = PROMPT.format(transcription=transcription)
+def generate_acta(transcription: str | None) -> ActaReunion | None:
+    if transcription is None:
+        gr.Error("Debe haber una transcripción para generar un acta.")
+        return
 
     try:
+        prompt = PROMPT.format(transcription=transcription)
         res = llm.generate(prompt, ActaReunion)
         acta = ActaReunion.model_validate_json(res)
-        return acta, gr.update(visible=False)
+        return acta
 
     except Exception as e:
         print(f"Error al generar acta: {e}")
-        # TODO: try again
+        gr.Error("Ocurrió un error al generar el acta.")
 
 
 def generate_pdf(
@@ -115,20 +125,21 @@ def generate_pdf(
 
     except Exception as e:
         print(f"Error al generar pdf: {e}")
-        # TODO: try again
+        gr.Error("Ocurrió un error al generar el PDF.")
 
 
 def main():
     with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as ui:  # type: ignore
-        transcription_value = gr.State()
+        transcription_state = gr.State()
         acta_state = gr.State(ACTA_DEFAULT)
 
         gr.Markdown("# Generador de actas de reuniones")
 
-        with gr.Column() as paso1:
+        with gr.Tab("Transcripción"):
             audio_input = gr.Audio(
                 label="Subir audio", type="filepath", interactive=True
             )
+
             transcribe_button = gr.Button("Transcribir", interactive=False)
             transcription_editable_value = gr.Textbox(
                 label="Transcripción del audio",
@@ -146,183 +157,189 @@ def main():
 
             generate_button = gr.Button("Generar Acta")
 
-        @gr.render(inputs=[acta_state], triggers=[acta_state.change])
-        def display_form(acta: ActaReunion):
-            with gr.Row():
-                fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
-                with gr.Row():
-                    hora_input = gr.Textbox(
-                        value=acta.hora, label="Hora de inicio"
-                    )
-                    hora_f_input = gr.Textbox(
-                        label="Hora de finalizacion",
-                        value=acta.hora_finalizacion,
-                    )
-
-            with gr.Row():
-                lugar_input = gr.Textbox(value=acta.lugar, label="Lugar")
-
-                tipo_sesion = gr.Radio(
-                    choices=["Ordinaria", "Extraordinaria"],
-                    interactive=True,
-                    label="Tipo de sesión",
-                    value=acta.tipo_sesion,
-                )
-
-            df_asistencia = pd.DataFrame([
-                dict(ac) for ac in acta.asistencia_cargo
-            ])
-            if df_asistencia.empty:
-                df_asistencia = pd.DataFrame(columns=["Nombre", "Cargo"])
-                df_asistencia.loc[0] = ["No se detectaron participantes", ""]
-            asistencia = gr.Dataframe(
-                interactive=True,
-                value=df_asistencia,
-                label="Asistencia",
-                row_count=(20, "dynamic"),
-                col_count=(2, "fixed"),
+            # 1. Recibe el audio y lo transcribe
+            audio_input.change(
+                fn=lambda audio: gr.update(interactive=audio is not None),
+                inputs=audio_input,
+                outputs=transcribe_button,
             )
-
-            orden_del_dia = gr.Dataframe(
-                headers=["Orden"],
-                interactive=True,
-                value=acta.orden_del_dia,
-                label="Orden del día",
-                row_count=(10, "dynamic"),
-                col_count=(1, "fixed"),
-            )
-
-            temas_desarrollados = gr.Dataframe(
-                headers=["Temas"],
-                interactive=True,
-                value=acta.desarrollo_temas,
-                label="Temas desarrollados",
-                row_count=(10, "dynamic"),
-                col_count=(1, "fixed"),
-            )
-
-            df_propuestas = pd.DataFrame([
-                p.__dict__ for p in acta.proposiciones
-            ])
-            if df_propuestas.empty:
-                df_propuestas = pd.DataFrame(columns=["Propuesta", "Estado"])
-                df_propuestas.loc[0] = ["No se detectaron propuestas", ""]
-            df_propuestas.columns = ["Propuesta", "Estado"]
-            df_propuestas.replace(
-                {True: "Aprobado", False: "No aprobado"}, inplace=True
-            )
-
-            gr.Markdown("Propuestas planteadas:")
-            propuestas = gr.Dataframe(value=df_propuestas, interactive=True)
-
-            df_acuerdos = pd.DataFrame([
-                a.__dict__ for a in acta.acuerdos_adoptados
-            ])
-            if df_acuerdos.empty:
-                df_acuerdos = pd.DataFrame(
-                    columns=["Acuerdo", "Fecha limite", "Responsable"]
-                )
-                df_acuerdos.loc[0] = ["No se detectaron acuerdos", "", ""]
-            df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
-
-            gr.Markdown("Acuerdos Aprobados:")
-            acuerdos = gr.Dataframe(value=df_acuerdos, interactive=True)
-
-            submit_form = gr.Button("Generar archivo de acta")
-
-            with gr.Column(visible=False) as Download_side:
-                gr.Markdown("Su archivo está listo para descargarse!")
-                Archivo = gr.File()
-
-            submit_form.click(
-                fn=generate_pdf,
-                inputs=[
-                    fecha_input,
-                    hora_input,
-                    hora_f_input,
-                    lugar_input,
-                    tipo_sesion,
-                    asistencia,
-                    orden_del_dia,
-                    temas_desarrollados,
-                    propuestas,
-                    acuerdos,
+            transcribe_button.click(
+                fn=transcribe,
+                inputs=audio_input,
+                outputs=[
+                    transcription_state,
+                    transcription_editable_value,
+                    edit_button,
+                    delete_button,
                 ],
-                outputs=[Download_side, Archivo],
             )
 
-        # 1. Recibe el audio y lo transcribe
-        audio_input.change(
-            fn=lambda audio: gr.update(interactive=audio is not None),
-            inputs=audio_input,
-            outputs=transcribe_button,
-        )
+            # 2. Editar la transcripcion
+            edit_button.click(
+                fn=activate_edit_transcription,
+                outputs=[
+                    edit_controls,
+                    transcription_editable_value,
+                    edit_button,
+                    delete_button,
+                    transcribe_button,
+                ],
+            )
 
-        transcribe_button.click(
-            fn=transcribe,
-            inputs=audio_input,
-            outputs=[
-                transcription_value,
-                transcription_editable_value,
-                edit_button,
-                delete_button,
-            ],
-        )
+            save_changes_button.click(
+                fn=save_edit_transcription,
+                inputs=[transcription_editable_value, transcription_state],
+                outputs=[
+                    transcription_editable_value,
+                    transcription_state,
+                    edit_controls,
+                    edit_button,
+                    delete_button,
+                    transcribe_button,
+                ],
+            )
 
-        # 2. Editar la transcripcion
-        edit_button.click(
-            fn=activate_edit_transcription,
-            outputs=[
-                edit_controls,
-                transcription_editable_value,
-                edit_button,
-                delete_button,
-                transcribe_button,
-            ],
-        )
+            cancel_edit_button.click(
+                fn=cancel_edit_transcription,
+                inputs=transcription_state,
+                outputs=[
+                    transcription_editable_value,
+                    transcription_state,
+                    edit_controls,
+                    edit_button,
+                    delete_button,
+                    transcribe_button,
+                ],
+            )
 
-        save_changes_button.click(
-            fn=save_edit_transcription,
-            inputs=[transcription_editable_value, transcription_value],
-            outputs=[
-                transcription_editable_value,
-                transcription_value,
-                edit_controls,
-                edit_button,
-                delete_button,
-                transcribe_button,
-            ],
-        )
+            delete_button.click(
+                fn=delete_transcription,
+                outputs=[
+                    transcription_editable_value,
+                    transcription_state,
+                    edit_button,
+                    delete_button,
+                ],
+            )
 
-        cancel_edit_button.click(
-            fn=cancel_edit_transcription,
-            inputs=transcription_value,
-            outputs=[
-                transcription_editable_value,
-                transcription_value,
-                edit_controls,
-                edit_button,
-                delete_button,
-                transcribe_button,
-            ],
-        )
+            # 3. Generar el acta
+            generate_button.click(
+                fn=generate_acta,
+                inputs=[transcription_state],
+                outputs=[acta_state],
+            )
 
-        delete_button.click(
-            fn=delete_transcription,
-            outputs=[
-                transcription_editable_value,
-                transcription_value,
-                edit_button,
-                delete_button,
-            ],
-        )
+        with gr.Tab("Acta"):
 
-        # 3. Generar el acta
-        generate_button.click(
-            fn=generate_acta,
-            inputs=[transcription_value],
-            outputs=[acta_state, paso1],
-        )
+            @gr.render(inputs=[acta_state], triggers=[acta_state.change])
+            def display_form(acta: ActaReunion):
+                with gr.Row():
+                    fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
+                    with gr.Row():
+                        hora_input = gr.Textbox(
+                            value=acta.hora, label="Hora de inicio"
+                        )
+                        hora_f_input = gr.Textbox(
+                            label="Hora de finalizacion",
+                            value=acta.hora_finalizacion,
+                        )
+
+                with gr.Row():
+                    lugar_input = gr.Textbox(value=acta.lugar, label="Lugar")
+
+                    tipo_sesion = gr.Radio(
+                        choices=["Ordinaria", "Extraordinaria"],
+                        interactive=True,
+                        label="Tipo de sesión",
+                        value=acta.tipo_sesion,
+                    )
+
+                df_asistencia = pd.DataFrame([
+                    dict(ac) for ac in acta.asistencia_cargo
+                ])
+                if df_asistencia.empty:
+                    df_asistencia = pd.DataFrame(columns=["Nombre", "Cargo"])
+                    df_asistencia.loc[0] = [
+                        "No se detectaron participantes",
+                        "",
+                    ]
+                asistencia = gr.Dataframe(
+                    interactive=True,
+                    value=df_asistencia,
+                    label="Asistencia",
+                    row_count=(20, "dynamic"),
+                    col_count=(2, "fixed"),
+                )
+
+                orden_del_dia = gr.Dataframe(
+                    headers=["Orden"],
+                    interactive=True,
+                    value=acta.orden_del_dia,
+                    label="Orden del día",
+                    row_count=(10, "dynamic"),
+                    col_count=(1, "fixed"),
+                )
+
+                temas_desarrollados = gr.Dataframe(
+                    headers=["Temas"],
+                    interactive=True,
+                    value=acta.desarrollo_temas,
+                    label="Temas desarrollados",
+                    row_count=(10, "dynamic"),
+                    col_count=(1, "fixed"),
+                )
+
+                df_propuestas = pd.DataFrame([
+                    p.__dict__ for p in acta.proposiciones
+                ])
+                if df_propuestas.empty:
+                    df_propuestas = pd.DataFrame(
+                        columns=["Propuesta", "Estado"]
+                    )
+                    df_propuestas.loc[0] = ["No se detectaron propuestas", ""]
+                df_propuestas.columns = ["Propuesta", "Estado"]
+                df_propuestas.replace(
+                    {True: "Aprobado", False: "No aprobado"}, inplace=True
+                )
+
+                gr.Markdown("Propuestas planteadas:")
+                propuestas = gr.Dataframe(value=df_propuestas, interactive=True)
+
+                df_acuerdos = pd.DataFrame([
+                    a.__dict__ for a in acta.acuerdos_adoptados
+                ])
+                if df_acuerdos.empty:
+                    df_acuerdos = pd.DataFrame(
+                        columns=["Acuerdo", "Fecha limite", "Responsable"]
+                    )
+                    df_acuerdos.loc[0] = ["No se detectaron acuerdos", "", ""]
+                df_acuerdos.columns = ["Acuerdo", "Fecha limite", "Responsable"]
+
+                gr.Markdown("Acuerdos Aprobados:")
+                acuerdos = gr.Dataframe(value=df_acuerdos, interactive=True)
+
+                submit_form = gr.Button("Generar archivo de acta")
+
+                with gr.Column(visible=False) as Download_side:
+                    gr.Markdown("Su archivo está listo para descargarse!")
+                    Archivo = gr.File()
+
+                submit_form.click(
+                    fn=generate_pdf,
+                    inputs=[
+                        fecha_input,
+                        hora_input,
+                        hora_f_input,
+                        lugar_input,
+                        tipo_sesion,
+                        asistencia,
+                        orden_del_dia,
+                        temas_desarrollados,
+                        propuestas,
+                        acuerdos,
+                    ],
+                    outputs=[Download_side, Archivo],
+                )
 
     ui.launch(share=settings.ENVIRONMENT == "prod", debug=True)
 
