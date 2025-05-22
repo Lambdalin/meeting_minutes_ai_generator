@@ -33,10 +33,10 @@ class vLLMWhisper:
         self.model = vllm.LLM(
             model=settings.ASR_MODEL,
             limit_mm_per_prompt={"audio": 1},
-            gpu_memory_utilization=0.5,
+            gpu_memory_utilization=0.8,
             dtype="float16",
             max_num_seqs=400,
-            max_num_batched_tokens=448,
+            max_num_batched_tokens=2048,
             task="transcription",
         )
         self.tokenizer = WhisperTokenizerFast.from_pretrained(

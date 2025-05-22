@@ -4,12 +4,12 @@ import pandas as pd
 from constants import ACTA_DEFAULT, PROMPT
 from schema import ActaReunion
 from settings import settings
-from utils.ai.asr import vLLMWhisper
+from utils.ai.asr import Whisper
 from utils.ai.llm import OpenAIClient, vLLMClient
 from utils.pdf import generate_and_save_pdf
 
 llm = OpenAIClient() if settings.ENVIRONMENT == "dev" else vLLMClient()
-asr = vLLMWhisper()
+asr = Whisper()
 
 
 def transcribe(audio_path: str):
