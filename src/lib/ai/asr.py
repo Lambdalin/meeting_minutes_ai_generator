@@ -25,7 +25,7 @@ class Whisper:
 
     def transcribe(self, audio_path: str) -> str:
         result = self.model.transcribe(audio_path)
-        return result["text"]
+        return result.get("text", "")
 
 
 class vLLMWhisper:

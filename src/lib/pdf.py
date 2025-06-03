@@ -1,12 +1,13 @@
 from fpdf import FPDF, XPos, YPos
 
+
 def dataframe_to_table(df):
     headers = tuple(df.columns)
     data = [tuple(row) for row in df.itertuples(index=False, name=None)]
     data = (headers,) + tuple(data)
     return data
 
-def generate_and_save_pdf(fecha, hora_inicio, hora_final, lugar, tipo_sesion, asistencia, orden, temas, propuestas, acuerdos, filepath):
+def generate_and_save(fecha, hora_inicio, hora_final, lugar, tipo_sesion, asistencia, orden, temas, propuestas, acuerdos, filepath):
     ASISTENCIA = dataframe_to_table(asistencia)
     ORDEN = dataframe_to_table(orden)
     TEMAS = dataframe_to_table(temas)

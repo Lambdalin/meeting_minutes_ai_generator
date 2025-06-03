@@ -1275,7 +1275,7 @@ requires-dist = [
     { name = "fpdf2", specifier = "==2.8.2" },
     { name = "gradio", specifier = "==5.21.0" },
     { name = "langchain", specifier = "==0.3.20" },
-    { name = "librosa", specifier = ">=0.11.0" },
+    { name = "librosa", specifier = "==0.11.0" },
     { name = "openai-whisper", specifier = "==20240930" },
     { name = "pydantic", specifier = "==2.10.6" },
     { name = "python-dotenv", specifier = "==1.1.0" },

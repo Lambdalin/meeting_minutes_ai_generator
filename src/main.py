@@ -1,25 +1,41 @@
+import logging
+from functools import cache
+
 import gradio as gr
 import pandas as pd
 
 from constants import ACTA_DEFAULT, PROMPT
 from lib.ai.asr import Whisper
 from lib.ai.llm import OpenAIClient, vLLMClient
-from lib.pdf import generate_and_save_pdf
+from lib.pdf import generate_and_save
 from schema import ActaReunion
 from settings import settings
 
-llm = OpenAIClient() if settings.ENVIRONMENT == "dev" else vLLMClient()
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S", 
+    filename="logs.log",
+    filemode="a",
+    encoding="utf-8",
+)
+log = logging.getLogger("app")
+
+llm = vLLMClient() if settings.ENVIRONMENT == "prod" else OpenAIClient()
 asr = Whisper()
 
 
+@cache
 def transcribe(audio_path: str | None):
+    log.info("Transcribe: %s", audio_path)
     if audio_path is None:
+        log.error("Audio not sended")
         gr.Error("Suba un audio.")
         return
 
     try:
-        # transcription = asr.transcribe(audio_path)
-        transcription = mock_transcription
+        transcription = asr.transcribe(audio_path)
+        log.debug("Transcription: %s", transcription)
         return (
             transcription,
             transcription,
@@ -28,7 +44,7 @@ def transcribe(audio_path: str | None):
         )
 
     except Exception as e:
-        print(f"Error to transcribe audio: {e}")
+        log.error("Error to transcribe audio: %s", e)
         gr.Error("Ocurrió un error al generar la transcripción.")
 
 
@@ -78,22 +94,32 @@ def delete_transcription():
     )
 
 
+@cache
 def generate_acta(transcription: str | None) -> ActaReunion | None:
+    log.info("Generating 'Acta'")
     if transcription is None:
+        log.error("No transcription sended")
         gr.Error("Debe haber una transcripción para generar un acta.")
         return
 
     try:
         prompt = PROMPT.format(transcription=transcription)
+        log.debug("Prompt:\n%s", prompt)
+
         res = llm.generate(prompt, ActaReunion)
+        log.debug("Response:\n%s", res)
+
         acta = ActaReunion.model_validate_json(res)
+        log.debug("Acta:\n%s", acta)
+
         return acta
 
     except Exception as e:
-        print(f"Error al generar acta: {e}")
+        log.error("Error al generar acta: %s", e)
         gr.Error("Ocurrió un error al generar el acta.")
 
 
+@cache
 def generate_pdf(
     fecha,
     hora_inicio,
@@ -107,8 +133,9 @@ def generate_pdf(
     acuerdos,
     filepath="acta.pdf",
 ):
+    log.info("Generating PDF")
     try:
-        generate_and_save_pdf(
+        generate_and_save(
             fecha,
             hora_inicio,
             hora_final,
@@ -121,10 +148,11 @@ def generate_pdf(
             acuerdos,
             filepath,
         )
+        log.info("Correctly generated PDF")
         return gr.update(visible=True), gr.update(value=filepath)
 
     except Exception as e:
-        print(f"Error al generar pdf: {e}")
+        log.error("Error al generar pdf:\n%s", e)
         gr.Error("Ocurrió un error al generar el PDF.")
 
 
@@ -230,7 +258,6 @@ def main():
             )
 
         with gr.Tab("Acta"):
-
             @gr.render(inputs=[acta_state], triggers=[acta_state.change])
             def display_form(acta: ActaReunion):
                 with gr.Row():
