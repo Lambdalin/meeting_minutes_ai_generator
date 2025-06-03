@@ -367,8 +367,7 @@ def main():
                     ],
                     outputs=[Download_side, Archivo],
                 )
-
-    ui.launch(share=settings.ENVIRONMENT == "prod", debug=True)
+    ui.launch(share=True, debug=True)
 
 
 if __name__ == "__main__":
