@@ -24,6 +24,7 @@ log = logging.getLogger("app")
 llm = vLLMClient() if settings.ENVIRONMENT == "prod" else OpenAIClient()
 asr = Whisper()
 
+MAX_RETRIES = 3
 
 @cache
 def transcribe(audio_path: str | None):
@@ -33,19 +34,20 @@ def transcribe(audio_path: str | None):
         gr.Error("Suba un audio.")
         return
 
-    try:
-        transcription = asr.transcribe(audio_path)
-        log.debug("Transcription: %s", transcription)
-        return (
-            transcription,
-            transcription,
-            gr.update(interactive=True),
-            gr.update(interactive=True),
-        )
+    for _ in range(MAX_RETRIES):
+        try:
+            transcription = asr.transcribe(audio_path)
+            log.debug("Transcription: %s", transcription)
+            return (
+                transcription,
+                transcription,
+                gr.update(interactive=True),
+                gr.update(interactive=True),
+            )
 
-    except Exception as e:
-        log.error("Error to transcribe audio: %s", e)
-        gr.Error("Ocurrió un error al generar la transcripción.")
+        except Exception as e:
+            log.error("Error to transcribe audio: %s", e)
+            gr.Error("Ocurrió un error al generar la transcripción.")
 
 
 def activate_edit_transcription():
@@ -101,22 +103,23 @@ def generate_acta(transcription: str | None) -> ActaReunion | None:
         log.error("No transcription sended")
         gr.Error("Debe haber una transcripción para generar un acta.")
         return
+    
+    for _ in range(MAX_RETRIES):
+        try:
+            prompt = PROMPT.format(transcription=transcription)
+            log.debug("Prompt:\n%s", prompt)
 
-    try:
-        prompt = PROMPT.format(transcription=transcription)
-        log.debug("Prompt:\n%s", prompt)
+            res = llm.generate(prompt, ActaReunion)
+            log.debug("Response:\n%s", res)
 
-        res = llm.generate(prompt, ActaReunion)
-        log.debug("Response:\n%s", res)
+            acta = ActaReunion.model_validate_json(res)
+            log.debug("Acta:\n%s", acta)
 
-        acta = ActaReunion.model_validate_json(res)
-        log.debug("Acta:\n%s", acta)
+            return acta
 
-        return acta
-
-    except Exception as e:
-        log.error("Error al generar acta: %s", e)
-        gr.Error("Ocurrió un error al generar el acta.")
+        except Exception as e:
+            log.error("Error al generar acta: %s", e)
+            gr.Error("Ocurrió un error al generar el acta.")
 
 
 @cache
@@ -134,29 +137,31 @@ def generate_pdf(
     filepath="acta.pdf",
 ):
     log.info("Generating PDF")
-    try:
-        generate_and_save(
-            fecha,
-            hora_inicio,
-            hora_final,
-            lugar,
-            tipo_sesion,
-            asistencia,
-            orden,
-            temas,
-            propuestas,
-            acuerdos,
-            filepath,
-        )
-        log.info("Correctly generated PDF")
-        return gr.update(visible=True), gr.update(value=filepath)
 
-    except Exception as e:
-        log.error("Error al generar pdf:\n%s", e)
-        gr.Error("Ocurrió un error al generar el PDF.")
+    for _ in range(MAX_RETRIES):
+        try:
+            generate_and_save(
+                fecha,
+                hora_inicio,
+                hora_final,
+                lugar,
+                tipo_sesion,
+                asistencia,
+                orden,
+                temas,
+                propuestas,
+                acuerdos,
+                filepath,
+            )
+            log.info("Correctly generated PDF")
+            return gr.update(visible=True), gr.update(value=filepath)
+
+        except Exception as e:
+            log.error("Error al generar pdf:\n%s", e)
+            gr.Error("Ocurrió un error al generar el PDF.")
 
 
-def main():
+def main() -> None:
     with gr.Blocks(fill_height=True, theme=gr.themes.Soft()) as ui:  # type: ignore
         transcription_state = gr.State()
         acta_state = gr.State(ACTA_DEFAULT)
