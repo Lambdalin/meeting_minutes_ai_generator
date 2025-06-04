@@ -1,3 +1,4 @@
+import logging
 from typing import Type
 
 import vllm
@@ -7,6 +8,7 @@ from vllm.sampling_params import GuidedDecodingParams
 
 from settings import settings
 
+log = logging.getLogger("app")
 
 generation_params = {
     "max_tokens": 500,
@@ -40,6 +42,7 @@ class OpenAIClient:
 
 class vLLMClient:
     def __init__(self) -> None:
+        log.info("Initializing vLLM")
         self.model = vllm.LLM(
             model=settings.LLM_MODEL,
             dtype=settings.DTYPE,
@@ -47,7 +50,7 @@ class vLLMClient:
             max_model_len=settings.CTX_WINDOW,
             max_num_seqs=2,
             enable_chunked_prefill=True,
-            gpu_memory_utilization=0.6,
+            gpu_memory_utilization=0.5,
             reasoning_parser="deepseek_r1",
             guided_decoding_backend="xgrammar",
         )
@@ -61,9 +64,7 @@ class vLLMClient:
             prompt,
             sampling_params=vllm.SamplingParams(
                 **generation_params,
-                guided_decoding=GuidedDecodingParams(
-                    json=schema.model_json_schema()
-                ),
+                guided_decoding=GuidedDecodingParams(json=schema.model_json_schema()),
             ),
         )
         return response[0].outputs[0].text

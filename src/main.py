@@ -14,7 +14,7 @@ from settings import settings
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S", 
+    datefmt="%Y-%m-%d %H:%M:%S",
     filename="logs.log",
     filemode="a",
     encoding="utf-8",
@@ -25,6 +25,7 @@ llm = vLLMClient() if settings.ENVIRONMENT == "prod" else OpenAIClient()
 asr = Whisper()
 
 MAX_RETRIES = 3
+
 
 @cache
 def transcribe(audio_path: str | None):
@@ -65,9 +66,7 @@ def save_edit_transcription(edited_text, old_text):
         old_text = edited_text
 
     return (
-        gr.update(
-            value=old_text, interactive=False
-        ),  # transcription_text_editable
+        gr.update(value=old_text, interactive=False),  # transcription_text_editable
         edited_text,  # transcription_text_show
         gr.update(visible=False),  # edit_controls
         gr.update(visible=True),  # edit_button
@@ -103,7 +102,7 @@ def generate_acta(transcription: str | None) -> ActaReunion | None:
         log.error("No transcription sended")
         gr.Error("Debe haber una transcripción para generar un acta.")
         return
-    
+
     for _ in range(MAX_RETRIES):
         try:
             prompt = PROMPT.format(transcription=transcription)
@@ -263,14 +262,13 @@ def main() -> None:
             )
 
         with gr.Tab("Acta"):
+
             @gr.render(inputs=[acta_state], triggers=[acta_state.change])
             def display_form(acta: ActaReunion):
                 with gr.Row():
                     fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
                     with gr.Row():
-                        hora_input = gr.Textbox(
-                            value=acta.hora, label="Hora de inicio"
-                        )
+                        hora_input = gr.Textbox(value=acta.hora, label="Hora de inicio")
                         hora_f_input = gr.Textbox(
                             label="Hora de finalizacion",
                             value=acta.hora_finalizacion,
@@ -286,9 +284,7 @@ def main() -> None:
                         value=acta.tipo_sesion,
                     )
 
-                df_asistencia = pd.DataFrame([
-                    dict(ac) for ac in acta.asistencia_cargo
-                ])
+                df_asistencia = pd.DataFrame([dict(ac) for ac in acta.asistencia_cargo])
                 if df_asistencia.empty:
                     df_asistencia = pd.DataFrame(columns=["Nombre", "Cargo"])
                     df_asistencia.loc[0] = [
@@ -321,13 +317,9 @@ def main() -> None:
                     col_count=(1, "fixed"),
                 )
 
-                df_propuestas = pd.DataFrame([
-                    p.__dict__ for p in acta.proposiciones
-                ])
+                df_propuestas = pd.DataFrame([p.__dict__ for p in acta.proposiciones])
                 if df_propuestas.empty:
-                    df_propuestas = pd.DataFrame(
-                        columns=["Propuesta", "Estado"]
-                    )
+                    df_propuestas = pd.DataFrame(columns=["Propuesta", "Estado"])
                     df_propuestas.loc[0] = ["No se detectaron propuestas", ""]
                 df_propuestas.columns = ["Propuesta", "Estado"]
                 df_propuestas.replace(
@@ -337,9 +329,9 @@ def main() -> None:
                 gr.Markdown("Propuestas planteadas:")
                 propuestas = gr.Dataframe(value=df_propuestas, interactive=True)
 
-                df_acuerdos = pd.DataFrame([
-                    a.__dict__ for a in acta.acuerdos_adoptados
-                ])
+                df_acuerdos = pd.DataFrame(
+                    [a.__dict__ for a in acta.acuerdos_adoptados]
+                )
                 if df_acuerdos.empty:
                     df_acuerdos = pd.DataFrame(
                         columns=["Acuerdo", "Fecha limite", "Responsable"]
@@ -372,6 +364,7 @@ def main() -> None:
                     ],
                     outputs=[Download_side, Archivo],
                 )
+
     ui.launch(share=settings.ENVIRONMENT == "prod", debug=True)
 
 

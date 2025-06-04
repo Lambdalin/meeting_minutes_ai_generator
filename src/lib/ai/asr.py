@@ -1,3 +1,4 @@
+import logging
 import time
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from transformers import WhisperTokenizerFast
 
 from settings import settings
 
+log = logging.getLogger("app")
+
 params = {
     "temperature": 0,
     "top_p": 1.0,
@@ -18,6 +21,11 @@ params = {
 
 class Whisper:
     def __init__(self) -> None:
+        log.info(
+            "Initializing Whisper:\nname:%s\ndevice:%s",
+            settings.ASR_MODEL,
+            settings.DEVICE,
+        )
         self.model = whisper.load_model(
             name=settings.ASR_MODEL,
             device=settings.DEVICE,
