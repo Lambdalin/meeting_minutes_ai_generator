@@ -21,8 +21,9 @@ logging.basicConfig(
 )
 log = logging.getLogger("app")
 
-llm = vLLMClient() if settings.ENVIRONMENT == "prod" else OpenAIClient()
 asr = Whisper()
+llm = vLLMClient() if settings.ENVIRONMENT == "prod" else OpenAIClient()
+
 
 MAX_RETRIES = 3
 
