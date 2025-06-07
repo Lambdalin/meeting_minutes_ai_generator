@@ -36,6 +36,7 @@ PROMPT = """
     <item>No hagas deducciones implícitas, ni completes con lógica externa.</item>
     <item>Evita cualquier símbolo que no sea punto (.) o coma (,).</item>
     <item>Si un dato no está presente en la transcripción, déjalo como campo vacío.</item>
+    <item>No utilice comillas para poner la informacion en los campos</item>
   </restricciones>
   <formato_salida>
     El JSON debe contener los siguientes campos:
