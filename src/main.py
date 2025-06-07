@@ -267,11 +267,11 @@ def main() -> None:
             @gr.render(inputs=[acta_state], triggers=[acta_state.change])
             def display_form(acta: ActaReunion):
                 with gr.Row():
-                    fecha_input = gr.Textbox(value=acta.fecha, label="Fecha")
+                    fecha_input = gr.Textbox(value=acta.fecha or "01/15/2025", label="Fecha")
                     with gr.Row():
-                        hora_input = gr.Textbox(value=acta.hora, label="Hora de inicio")
+                        hora_input = gr.Textbox(value=acta.hora, label="Inicio")
                         hora_f_input = gr.Textbox(
-                            label="Hora de finalizacion",
+                            label="Finalizacion",
                             value=acta.hora_finalizacion,
                         )
 
