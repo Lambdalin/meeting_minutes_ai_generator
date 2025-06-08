@@ -11,8 +11,8 @@ from settings import settings
 log = logging.getLogger("app")
 
 generation_params = {
-    "max_tokens": 500,
-    "temperature": 0,
+    "max_tokens": 4000,
+    "temperature": 0.2,
     "top_p": 0.95,
     "frequency_penalty": 0.5,
     "presence_penalty": 1.2,
