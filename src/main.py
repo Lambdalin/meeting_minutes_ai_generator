@@ -6,7 +6,7 @@ import pandas as pd
 
 from constants import ACTA_DEFAULT, PROMPT
 from lib.ai.asr import Whisper
-from lib.ai.llm import OpenAIClient, vLLMClient
+from lib.ai.llm import OpenAIClient ,vLLMClient
 from lib.pdf import generate_and_save
 from schema import ActaReunion
 from settings import settings
@@ -53,12 +53,12 @@ def transcribe(audio_path: str | None):
 
 def activate_edit_transcription():
     return (
-        gr.update(visible=True),  # edit_controls
-        gr.update(interactive=True),  # transcription text editable
-        gr.update(visible=False),  # edit button
-        gr.update(visible=False),  # delete button
+        gr.update(visible=True),  
+        gr.update(interactive=True), 
+        gr.update(visible=False),  
+        gr.update(visible=False), 
         gr.update(interactive=False),
-    )  # transcribe button
+    )  
 
 
 def save_edit_transcription(edited_text, old_text):
@@ -66,11 +66,11 @@ def save_edit_transcription(edited_text, old_text):
         old_text = edited_text
 
     return (
-        gr.update(value=old_text, interactive=False),  # transcription_text_editable
-        edited_text,  # transcription_text_show
-        gr.update(visible=False),  # edit_controls
-        gr.update(visible=True),  # edit_button
-        gr.update(visible=True),  # delete_button
+        gr.update(value=old_text, interactive=False),  
+        edited_text,  
+        gr.update(visible=False),  
+        gr.update(visible=True), 
+        gr.update(visible=True),  
         gr.update(interactive=True),
     )
 
@@ -121,7 +121,6 @@ def generate_acta(transcription: str | None) -> ActaReunion | None:
             gr.Error("Ocurrió un error al generar el acta.")
 
 
-@cache
 def generate_pdf(
     fecha,
     hora_inicio,
@@ -206,7 +205,7 @@ def main() -> None:
                 ],
             )
 
-            # 2. Editar la transcripcion
+
             edit_button.click(
                 fn=activate_edit_transcription,
                 outputs=[
@@ -254,7 +253,7 @@ def main() -> None:
                 ],
             )
 
-            # 3. Generar el acta
+
             generate_button.click(
                 fn=generate_acta,
                 inputs=[transcription_state],
